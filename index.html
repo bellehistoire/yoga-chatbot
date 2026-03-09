@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yoga Assistant — ECLOREYOGA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+JP:wght@300;400;500&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAFAF6;
+    --warm-white: #F5F2EC;
+    --brown: #7C6A52;
+    --brown-light: #A08C72;
+    --brown-pale: #E8E0D4;
+    --green: #3D5A47;
+    --green-light: #5A7A63;
+    --green-pale: #D4DDD6;
+    --ink: #2C2416;
+    --ink-light: #5C4E3A;
+    --shadow: rgba(44, 36, 22, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--cream);
+    border-bottom: 1px solid var(--brown-pale);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    text-transform: uppercase;
+  }
+
+  .logo span {
+    color: var(--brown);
+    font-style: italic;
+  }
+
+  .header-subtitle {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--brown-light);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── API Key Setup（非表示） ── */
+  #apiSetup { display: none; }
+
+  /* ── Main Layout ── */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  /* ── Welcome Banner ── */
+  #welcome {
+    text-align: center;
+    padding: 48px 24px 32px;
+    border-bottom: 1px solid var(--brown-pale);
+    margin-bottom: 8px;
+  }
+
+  .welcome-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  #welcome h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+
+  #welcome p {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.8rem;
+    color: var(--brown-light);
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Suggestion Chips ── */
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .chip {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.72rem;
+    color: var(--brown);
+    border: 1px solid var(--brown-pale);
+    background: var(--cream);
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .chip:hover {
+    background: var(--green);
+    color: var(--cream);
+    border-color: var(--green);
+  }
+
+  /* ── Chat Area ── */
+  #chatBox {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 300px;
+    max-height: calc(100vh - 320px);
+  }
+
+  #chatBox::-webkit-scrollbar { width: 4px; }
+  #chatBox::-webkit-scrollbar-track { background: transparent; }
+  #chatBox::-webkit-scrollbar-thumb { background: var(--brown-pale); border-radius: 2px; }
+
+  .message {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    animation: fadeUp 0.3s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .avatar.bot {
+    background: var(--green-pale);
+    color: var(--green);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-style: italic;
+  }
+
+  .avatar.user {
+    background: var(--brown-pale);
+    color: var(--brown);
+  }
+
+  .bubble {
+    max-width: 78%;
+    padding: 14px 18px;
+    border-radius: 2px;
+    font-size: 0.85rem;
+    line-height: 1.85;
+    letter-spacing: 0.03em;
+  }
+
+  .message.bot .bubble {
+    background: var(--warm-white);
+    border: 1px solid var(--brown-pale);
+    color: var(--ink);
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 300;
+    border-radius: 0 8px 8px 8px;
+  }
+
+  .message.user .bubble {
+    background: var(--green);
+    color: var(--cream);
+    border-radius: 8px 0 8px 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  /* ── Typing Indicator ── */
+  .typing {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .typing span {
+    width: 6px;
+    height: 6px;
+    background: var(--brown-light);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* ── Input Area ── */
+  #inputArea {
+    border-top: 1px solid var(--brown-pale);
+    padding: 16px 0 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--cream);
+    position: sticky;
+    bottom: 0;
+  }
+
+  #userInput {
+    flex: 1;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    border: 1px solid var(--brown-pale);
+    background: var(--warm-white);
+    color: var(--ink);
+    padding: 12px 16px;
+    border-radius: 2px;
+    outline: none;
+    resize: none;
+    min-height: 48px;
+    max-height: 140px;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  #userInput:focus { border-color: var(--green); }
+  #userInput::placeholder { color: var(--brown-light); opacity: 0.6; }
+
+  #sendBtn {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    background: var(--green);
+    color: var(--cream);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.2s;
+    height: 48px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  #sendBtn:hover { background: var(--green-light); }
+  #sendBtn:disabled { background: var(--brown-pale); color: var(--brown-light); cursor: not-allowed; }
+
+  /* ── Disclaimer ── */
+  .disclaimer {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--brown-light);
+    padding-bottom: 8px;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 600px) {
+    header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    #apiSetup { flex-wrap: wrap; }
+    #apiKeyInput { width: 100%; }
+    #welcome h1 { font-size: 1.4rem; }
+    .bubble { max-width: 90%; font-size: 0.82rem; }
+    #chatBox { max-height: calc(100vh - 380px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div>
+    <div class="logo">Eclore<span>Yoga</span></div>
+    <div class="header-subtitle">Yoga Assistant</div>
+  </div>
+  <div id="apiSetup">
+    <label>API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+    <button id="saveKeyBtn" onclick="saveKey()">保存</button>
+    <span id="keyStatus"></span>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+
+  <!-- Welcome -->
+  <div id="welcome">
+    <div class="welcome-icon">🪷</div>
+    <h1>Yoga Assistant</h1>
+    <p>ヨガに関するご質問にお答えします。<br>アーサナ・解剖学・哲学・アライメントメソッドなど、お気軽にどうぞ。</p>
+    <div class="suggestions">
+      <span class="chip" onclick="sendChip('ダウンドッグの正しいアライメントを教えてください')">ダウンドッグのアライメント</span>
+      <span class="chip" onclick="sendChip('太陽礼拝Aの流れを説明してください')">太陽礼拝Aの流れ</span>
+      <span class="chip" onclick="sendChip('ハムストリングを安全に伸ばすコツは？')">ハムストリングのストレッチ</span>
+      <span class="chip" onclick="sendChip('ヨガ初心者が最初に学ぶべきことは何ですか？')">初心者へのアドバイス</span>
+      <span class="chip" onclick="sendChip('呼吸法（プラーナヤーマ）の基本を教えてください')">プラーナヤーマの基本</span>
+      <span class="chip" onclick="sendChip('ヨガのヤマとニヤマとは何ですか？')">ヤマ・ニヤマとは</span>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div id="chatBox"></div>
+
+  <!-- Input -->
+  <div id="inputArea">
+    <textarea id="userInput" placeholder="ヨガについて何でも聞いてください…" rows="1"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button id="sendBtn" onclick="sendMessage()">送る</button>
+  </div>
+  <div class="disclaimer">※ 医療的なアドバイスは提供できません。怪我や体調不良の場合は専門家にご相談ください。</div>
+
+</main>
+
+<script>
+  // ── System Prompt ──
+  const SYSTEM_PROMPT = `あなたはECLOREYOGA（エクロールヨガ）の専門AIアシスタントです。
+ヨガインストラクター養成スクールの受講生や会員の質問に、丁寧かつ専門的に答えてください。
+
+【得意な分野】
+- アーサナ（ヨガのポーズ）の説明・効果・注意点・バリエーション
+- アライメントの指導（ハート・イン／アウトエネルギー、インナー／アウターラインの概念）
+- 解剖学・筋肉・関節の働き（ヨガの文脈で）
+- キューイング（言語・身体・視覚的な誘導方法）
+- ヴィンヤサシークエンスの組み立て方
+- 呼吸法（プラーナヤーマ）の種類と実践
+- ヨガ哲学（八支則・ヤマ・ニヤマなど）
+- サンスクリット語の用語解説
+- 初心者へのアドバイス・安全な練習方法
+- 怪我の予防・禁忌ポーズの注意点
+
+【回答スタイル】
+- 日本語で丁寧かつ親しみやすいトーンで話してください
+- 専門用語を使う場合は簡単な説明を添えてください
+- サンスクリット語は日本語読みとともに記載してください
+- 長い説明は箇条書きや段落を使って読みやすくしてください
+- 安全への配慮を常に念頭において回答してください
+
+【重要な注意事項】
+- 医療的な診断・治療・処方に関する回答はしないでください
+- 怪我や健康上の問題がある場合は、必ず専門家（医師・理学療法士）への相談を促してください
+- ヨガ以外の話題（政治・経済・芸能など）には答えないでください`;
+
+  // ⚠ 以下にAPIキーを貼り付けてください
+  const API_KEY = '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';
+
+
+  let apiKey = API_KEY;
+  let messages = [];
+
+  function saveKey() {}
+
+  // ── Auto Resize ──
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+  }
+
+  // ── Enter Key ──
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  // ── Chip Click ──
+  function sendChip(text) {
+    document.getElementById('userInput').value = text;
+    sendMessage();
+  }
+
+  // ── Add Message ──
+  function addMessage(role, text) {
+    const chatBox = document.getElementById('chatBox');
+
+    // Welcome を隠す
+    document.getElementById('welcome').style.display = 'none';
+
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = `avatar ${role}`;
+    avatar.textContent = role === 'bot' ? 'Y' : '🙋';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = text.replace(/\n/g, '<br>');
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return bubble;
+  }
+
+  // ── Typing Indicator ──
+  function showTyping() {
+    const chatBox = document.getElementById('chatBox');
+    const div = document.createElement('div');
+    div.className = 'message bot';
+    div.id = 'typingIndicator';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar bot';
+    avatar.textContent = 'Y';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  // ── Send Message ──
+  async function sendMessage() {
+    if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+      alert('APIキーが設定されていません。HTMLファイル内の YOUR_API_KEY_HERE を実際のキーに置き換えてください。');
+      return;
+    }
+
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('sendBtn').disabled = true;
+
+    addMessage('user', text);
+    messages.push({ role: 'user', content: text });
+
+    showTyping();
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1024,
+          system: SYSTEM_PROMPT,
+          messages: messages
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || 'APIエラーが発生しました');
+      }
+
+      const data = await response.json();
+      const reply = data.content[0].text;
+      messages.push({ role: 'assistant', content: reply });
+
+      removeTyping();
+      addMessage('bot', reply);
+
+    } catch (err) {
+      removeTyping();
+      addMessage('bot', `⚠ エラーが発生しました：${err.message}`);
+    }
+
+    document.getElementById('sendBtn').disabled = false;
+    input.focus();
+  }
+</script>
+</body>
+</html>
